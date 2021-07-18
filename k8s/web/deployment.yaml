@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: movies
 spec:  
-  replicas: 10
+  replicas: 1
   selector:
     matchLabels:
       app: movies
@@ -14,33 +14,20 @@ spec:
     spec: 
       containers:
         - name: movies
-          image: fabricioveronez/rotten-potatoes
+          image: fabricioveronez/rotten-potatoes:23
           ports:
             - containerPort: 5000
-          env: 
-            - name: MONGODB_DB
-              value: admin
-            - name: MONGODB_HOST
-              value: mongo-service
-            - name: MONGODB_PORT
-              value: "27017"
+          envFrom:
+            - configMapRef:
+                name: movies-configmap
+          env:
             - name: MONGODB_USERNAME
-              value: mongouser
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: MONGO_INITDB_ROOT_USERNAME
             - name: MONGODB_PASSWORD
-              value: mongopwd
-
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: movies-service
-spec:
-  selector:
-    app: movies
-  ports: 
-  - port: 80
-    targetPort: 5000
-    nodePort: 30000
-  type: LoadBalancer
-  
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: MONGO_INITDB_ROOT_PASSWORD
